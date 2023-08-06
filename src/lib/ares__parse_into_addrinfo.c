@@ -35,6 +35,8 @@
 #  include <limits.h>
 #endif
 
+#define DISABLE_RR_NAME_CHECK 1
+
 #include "ares.h"
 #include "ares_dns.h"
 #include "ares_private.h"
@@ -110,7 +112,10 @@ int ares__parse_into_addrinfo(const unsigned char *abuf,
 
       if (rr_class == C_IN && rr_type == T_A
           && rr_len == sizeof(struct in_addr)
-          && strcasecmp(rr_name, hostname) == 0)
+#ifndef DISABLE_RR_NAME_CHECK
+          && strcasecmp(rr_name, hostname) == 0
+#endif
+        )
         {
           got_a = 1;
           if (aptr + sizeof(struct in_addr) > abuf + alen)
@@ -125,7 +130,10 @@ int ares__parse_into_addrinfo(const unsigned char *abuf,
         }
       else if (rr_class == C_IN && rr_type == T_AAAA
           && rr_len == sizeof(struct ares_in6_addr)
-          && strcasecmp(rr_name, hostname) == 0)
+#ifndef DISABLE_RR_NAME_CHECK
+          && strcasecmp(rr_name, hostname) == 0
+#endif
+        )
         {
           got_aaaa = 1;
           if (aptr + sizeof(struct ares_in6_addr) > abuf + alen)
@@ -193,7 +201,11 @@ int ares__parse_into_addrinfo(const unsigned char *abuf,
         }
 
       /* save the question hostname as ai->name */
-      if (ai->name == NULL || strcasecmp(ai->name, question_hostname) != 0)
+      if (ai->name == NULL
+#ifndef DISABLE_RR_NAME_CHECK
+          || strcasecmp(ai->name, question_hostname) != 0
+#endif
+        )
         {
           ares_free(ai->name);
           ai->name = ares_strdup(question_hostname);
